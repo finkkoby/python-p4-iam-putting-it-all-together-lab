@@ -14,6 +14,8 @@ class User(db.Model, SerializerMixin):
 
     recipes = db.relationship('Recipe', back_populates='user')
 
+    serialize_rules = ('-recipes.user',)
+
 
     @hybrid_property
     def password_hash(self):
@@ -23,6 +25,10 @@ class User(db.Model, SerializerMixin):
     def password_hash(self, password):
         password_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
         self._password_hash = password_hash.decode('utf-8')
+
+    def authenticate(self, password):
+        return bcrypt.check_password_hash(
+            self._password_hash, password.encode('utf-8'))
 
 class Recipe(db.Model, SerializerMixin):
     __tablename__ = 'recipes'
@@ -34,3 +40,5 @@ class Recipe(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     user = db.relationship('User', back_populates="recipes")
+
+    serialize_rules = ('-user.recipes',)
